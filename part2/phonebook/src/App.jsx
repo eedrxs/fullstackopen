@@ -1,27 +1,77 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Filter from "./components/Filter"
 import PersonForm from "./components/PersonForm"
 import Persons from "./components/Persons"
+import Notification from "./components/Notification"
+
+import contactService from "./services/contacts"
 
 const App = () => {
-  const [persons, setPersons] = useState([
-    { name: "Arto Hellas", number: "040-1234567" },
-  ])
+  const [persons, setPersons] = useState([])
   const [newName, setNewName] = useState("")
   const [newNumber, setNewNumber] = useState("")
   const [filterText, setFilterText] = useState("")
+  const [notification, setNotification] = useState(null)
 
-  const addPerson = (e) => {
+  useEffect(() => {
+    contactService.getAll().then((contacts) => setPersons(contacts))
+  }, [])
+
+  const addContact = (e) => {
     e.preventDefault()
-
-    const nameExists = persons.some(({ name }) => name === newName)
-    if (nameExists) {
-      alert(`${newName} already exists in phonebook`)
+    const newPerson = { name: newName, number: newNumber }
+    const existingContact = persons.find(({ name }) => name === newName)
+    
+    if (existingContact) {
+      const wantsToEdit = confirm(
+        `${newName} is already added to phonebook, replace the old number with a new one?`
+      )
+      if (wantsToEdit) {
+        contactService
+          .update(existingContact.id, newPerson)
+          .then(() => {
+            showNotification(`Updated ${newName}`, "success")
+            contactService.getAll().then((contacts) => {
+              setPersons(contacts)
+              clearInputs()
+            })
+          })
+          .catch((err) => {
+            if (err.response.status === 404) {
+              showNotification(
+                `Information of ${newName} has already been removed from server`
+              )
+            }
+          })
+      }
     } else {
-      setPersons([...persons, { name: newName, number: newNumber }])
-      setNewName("")
-      setNewNumber("")
+      contactService.create(newPerson).then((newContact) => {
+        showNotification(`Added ${newName}`, "success")
+        setPersons([...persons, newContact])
+        clearInputs()
+      })
     }
+  }
+
+  const deleteContact = (id, name) => {
+    if (confirm(`Delete ${name} ?`)) {
+      contactService.deleteContact(id).then(() => {
+        showNotification(`Deleted ${name}`, "success")
+        contactService.getAll().then((contacts) => setPersons(contacts))
+      })
+    }
+  }
+
+  const clearInputs = () => {
+    setNewName("")
+    setNewNumber("")
+  }
+
+  const showNotification = (message, type) => {
+    setNotification({ message, type })
+    setTimeout(() => {
+      setNotification(null)
+    }, 5000)
   }
 
   const filteredPersons = persons.filter(({ name }) =>
@@ -31,6 +81,8 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+
+      <Notification notification={notification} />
       <Filter value={filterText} onChange={setFilterText} />
 
       <h3>Add a new</h3>
@@ -39,11 +91,11 @@ const App = () => {
         newNumber={newNumber}
         onNewName={setNewName}
         onNewNumber={setNewNumber}
-        onAddPerson={addPerson}
+        onAddPerson={addContact}
       />
 
       <h3>Numbers</h3>
-      <Persons persons={filteredPersons} />
+      <Persons persons={filteredPersons} onDeleteContact={deleteContact} />
     </div>
   )
 }

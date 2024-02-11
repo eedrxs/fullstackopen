@@ -1,14 +1,20 @@
+require("dotenv").config()
 const express = require("express")
-const morgan = require('morgan')
-const cors = require('cors')
+const morgan = require("morgan")
+const cors = require("cors")
 const app = express()
 
-morgan.token('body', (req, res) => JSON.stringify(req.body))
+morgan.token("body", (req, res) => JSON.stringify(req.body))
 
 app.use(cors())
-app.use(express.static('dist'))
+app.use(express.static("dist"))
 app.use(express.json())
-app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
+app.use(
+  morgan(":method :url :status :res[content-length] - :response-time ms :body")
+)
+
+const Person = require("./models/person")
+const errorHandler = require("./error")
 
 let persons = [
   {
@@ -37,7 +43,7 @@ const generateId = () => {
   return Math.random() * 1000
 }
 
-app.post("/api/persons", (req, res) => {
+app.post("/api/persons", (req, res, next) => {
   const payload = req.body
   const requiredProperties = ["name", "number"]
   const missingProperites = []
@@ -47,24 +53,13 @@ app.post("/api/persons", (req, res) => {
   }
 
   if (missingProperites.length === 0) {
-    for (let property in payload) {
-      const matchFound = persons.find(
-        (person) => payload[property] === person[property]
-      )
-      
-      if (matchFound) {
-        const errorMessage = `A person with the ${property} '${payload[property]}' already exists`
-        return res.status(409).json({ error: errorMessage })
-      }
-    }
-
-    const person = {
-      id: generateId(),
-      ...req.body,
-    }
-
-    persons.push(person)
-    res.json(person)
+    const person = new Person({ ...payload })
+    person
+      .save()
+      .then((person) => {
+        res.json(person)
+      })
+      .catch((err) => next(err))
   } else {
     const errorMessage = `missing ${missingProperites} propert${
       missingProperites.length > 1 ? "ies" : "y"
@@ -74,32 +69,61 @@ app.post("/api/persons", (req, res) => {
 })
 
 app.get("/api/persons", (req, res) => {
-  res.json(persons)
+  Person.find({}).then((persons) => {
+    res.json(persons)
+  })
 })
 
 app.get("/api/persons/:id", (req, res) => {
   const { id } = req.params
-  const person = persons.find((person) => person.id == id)
 
-  if (!person) {
-    return res.status(404).end()
-  }
+  Person.findById(id)
+    .then((person) => {
+      if (!person) {
+        return res.status(404).end()
+      }
 
-  res.json(person)
+      res.json(person)
+    })
+    .catch((err) => {
+      console.log(err)
+      res.status(500).end()
+    })
 })
 
-app.delete("/api/persons/:id", (req, res) => {
+app.put("/api/persons/:id", (req, res, next) => {
   const { id } = req.params
-  persons = persons.filter((person) => person.id != id)
-  res.status(204).end()
+  const payload = req.body
+
+  Person.findByIdAndUpdate(id, payload, { new: true })
+    .then((updatedPerson) => {
+      res.status(202).json(updatedPerson)
+    })
+    .catch((err) => next(err))
 })
 
-app.get("/info", (req, res) => {
-  res.end(`
-  <p>Phonebook has info for ${persons.length} people</p>
-  <p>${new Date()}</p>
-  `)
+app.delete("/api/persons/:id", (req, res, next) => {
+  const { id } = req.params
+
+  Person.findByIdAndDelete(id)
+    .then(() => {
+      res.status(204).end()
+    })
+    .catch((err) => next(err))
 })
+
+app.get("/info", (req, res, next) => {
+  Person.countDocuments({})
+    .then((numberOfPersons) => {
+      res.end(`
+      <p>Phonebook has info for ${numberOfPersons} people</p>
+      <p>${new Date()}</p>
+  `)
+    })
+    .catch((err) => next(err))
+})
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {

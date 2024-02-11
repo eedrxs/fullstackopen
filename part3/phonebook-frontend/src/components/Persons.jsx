@@ -1,0 +1,14 @@
+const Persons = ({ persons, onDeleteContact }) => {
+  return (
+    <div>
+      {persons.map(({ id, name, number }) => (
+        <p key={id}>
+          {name} {number}{" "}
+          <button onClick={() => onDeleteContact(id, name)}>delete</button>
+        </p>
+      ))}
+    </div>
+  )
+}
+
+export default Persons

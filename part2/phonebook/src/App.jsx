@@ -4,7 +4,7 @@ import PersonForm from "./components/PersonForm"
 import Persons from "./components/Persons"
 import Notification from "./components/Notification"
 
-import contactService from "./services/contacts"
+import personService from "./services/person"
 
 const App = () => {
   const [persons, setPersons] = useState([])
@@ -14,25 +14,25 @@ const App = () => {
   const [notification, setNotification] = useState(null)
 
   useEffect(() => {
-    contactService.getAll().then((contacts) => setPersons(contacts))
+    personService.getAll().then((persons) => setPersons(persons))
   }, [])
 
-  const addContact = (e) => {
+  const addPerson = (e) => {
     e.preventDefault()
     const newPerson = { name: newName, number: newNumber }
-    const existingContact = persons.find(({ name }) => name === newName)
+    const existingPerson = persons.find(({ name }) => name === newName)
     
-    if (existingContact) {
+    if (existingPerson) {
       const wantsToEdit = confirm(
         `${newName} is already added to phonebook, replace the old number with a new one?`
       )
       if (wantsToEdit) {
-        contactService
-          .update(existingContact.id, newPerson)
+        personService
+          .update(existingPerson.id, newPerson)
           .then(() => {
             showNotification(`Updated ${newName}`, "success")
-            contactService.getAll().then((contacts) => {
-              setPersons(contacts)
+            personService.getAll().then((persons) => {
+              setPersons(persons)
               clearInputs()
             })
           })
@@ -45,19 +45,19 @@ const App = () => {
           })
       }
     } else {
-      contactService.create(newPerson).then((newContact) => {
+      personService.create(newPerson).then((newPerson) => {
         showNotification(`Added ${newName}`, "success")
-        setPersons([...persons, newContact])
+        setPersons([...persons, newPerson])
         clearInputs()
       })
     }
   }
 
-  const deleteContact = (id, name) => {
+  const deletePerson = (id, name) => {
     if (confirm(`Delete ${name} ?`)) {
-      contactService.deleteContact(id).then(() => {
+      personService.deletePerson(id).then(() => {
         showNotification(`Deleted ${name}`, "success")
-        contactService.getAll().then((contacts) => setPersons(contacts))
+        personService.getAll().then((persons) => setPersons(persons))
       })
     }
   }
@@ -91,11 +91,11 @@ const App = () => {
         newNumber={newNumber}
         onNewName={setNewName}
         onNewNumber={setNewNumber}
-        onAddPerson={addContact}
+        onAddPerson={addPerson}
       />
 
       <h3>Numbers</h3>
-      <Persons persons={filteredPersons} onDeleteContact={deleteContact} />
+      <Persons persons={filteredPersons} onDeletePerson={deletePerson} />
     </div>
   )
 }

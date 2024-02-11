@@ -68,6 +68,24 @@ app.post("/api/persons", (req, res, next) => {
   }
 })
 
+app.put("/api/persons/:id", (req, res, next) => {
+  const { id } = req.params
+  const payload = req.body
+
+  Person.findByIdAndUpdate(id, payload, {
+    new: true,
+    runValidators: true,
+    context: "query",
+  })
+    .then((updatedPerson) => {
+      if (!updatedPerson) {
+        return res.status(404).end()
+      }
+      res.status(202).json(updatedPerson)
+    })
+    .catch((err) => next(err))
+})
+
 app.get("/api/persons", (req, res) => {
   Person.find({}).then((persons) => {
     res.json(persons)
@@ -89,17 +107,6 @@ app.get("/api/persons/:id", (req, res) => {
       console.log(err)
       res.status(500).end()
     })
-})
-
-app.put("/api/persons/:id", (req, res, next) => {
-  const { id } = req.params
-  const payload = req.body
-
-  Person.findByIdAndUpdate(id, payload, { new: true })
-    .then((updatedPerson) => {
-      res.status(202).json(updatedPerson)
-    })
-    .catch((err) => next(err))
 })
 
 app.delete("/api/persons/:id", (req, res, next) => {

@@ -1,16 +1,40 @@
 const { test, describe, beforeEach, after } = require("node:test")
 const assert = require("node:assert")
 const mongoose = require("mongoose")
+const jwt = require("jsonwebtoken")
 const supertest = require("supertest")
 const app = require("../app")
+const User = require("../models/user")
 const Blog = require("../models/blog")
+const config = require("../utils/config")
 const testHelper = require("./test_helper")
 
 const api = supertest(app)
+let user
+let token
 
 beforeEach(async () => {
+  await User.deleteMany({})
   await Blog.deleteMany({})
-  await Blog.insertMany(testHelper.initialBlogs)
+
+  user = new User({
+    username: "testUser",
+    password: "testPassword",
+    name: "Test User",
+  })
+  await user.save()
+
+  token = jwt.sign({ id: user._id, username: user.username }, config.SECRET)
+
+  await api
+    .post("/api/blogs")
+    .set("Authorization", `Bearer ${token}`)
+    .send(testHelper.initialBlogs[0])
+
+  await api
+    .post("/api/blogs")
+    .set("Authorization", `Bearer ${token}`)
+    .send(testHelper.initialBlogs[1])
 })
 
 test("blogs are returned as json", async () => {
@@ -42,6 +66,7 @@ test("a valid blog can be added", async () => {
 
   await api
     .post("/api/blogs")
+    .set("Authorization", `Bearer ${token}`)
     .send(newBlog)
     .expect(201)
     .expect("Content-Type", /application\/json/)
@@ -62,6 +87,7 @@ test("'likes' property with default value of zero is added when missing from pay
 
   await api
     .post("/api/blogs")
+    .set("Authorization", `Bearer ${token}`)
     .send(newBlog)
     .expect(201)
     .expect("Content-Type", /application\/json/)
@@ -79,14 +105,22 @@ test("returns 400 when 'title' or 'url' properties is missing", async () => {
     url: "google.com",
   }
 
-  await api.post("/api/blogs").send(newBlog).expect(400)
+  await api
+    .post("/api/blogs")
+    .set("Authorization", `Bearer ${token}`)
+    .send(newBlog)
+    .expect(400)
 
   newBlog = {
     title: "Automate The Boring Stuff",
     author: "John Doe",
   }
 
-  await api.post("/api/blogs").send(newBlog).expect(400)
+  await api
+    .post("/api/blogs")
+    .set("Authorization", `Bearer ${token}`)
+    .send(newBlog)
+    .expect(400)
 })
 
 describe("deletion of blog", () => {
@@ -94,7 +128,10 @@ describe("deletion of blog", () => {
     const blogsInStart = await api.get("/api/blogs")
     const blogToDelete = blogsInStart.body[0]
 
-    await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204)
+    await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(204)
     const blogsInEnd = await api.get("/api/blogs")
 
     assert.strictEqual(blogsInEnd.body.length, blogsInStart.body.length - 1)
@@ -111,6 +148,7 @@ describe("update of blog", () => {
 
     const updatedBlog = await api
       .patch(`/api/blogs/${blogToUpdate.id}`)
+      .set("Authorization", `Bearer ${token}`)
       .send({ likes: blogToUpdate.likes + 1 })
       .expect(202)
 
@@ -121,3 +159,4 @@ describe("update of blog", () => {
 after(async () => {
   await mongoose.connection.close()
 })
+

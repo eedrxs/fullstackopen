@@ -1,41 +1,62 @@
+const jwt = require("jsonwebtoken")
 const blogsRouter = require("express").Router()
 const Blog = require("../models/blog.js")
+const User = require("../models/user.js")
+const config = require("../utils/config.js")
 
-blogsRouter.get("/", async (request, response) => {
-  const blogs = await Blog.find({})
-  response.json(blogs)
+blogsRouter.get("/", async (req, res) => {
+  const blogs = await Blog.find({}).populate("user", { username: 1, name: 1 })
+  res.json(blogs)
 })
 
-blogsRouter.post("/", async (request, response) => {
-  if (!request.body.title || !request.body.url) {
-    return response.status(400).end()
+blogsRouter.post("/", async (req, res) => {
+  const user = req.user
+
+  if (user) {
+    if (!req.body.title || !req.body.url) {
+      return res.status(400).end()
+    }
+
+    req.body.likes ??= 0
+    req.body.user = user._id
+    const blog = new Blog(req.body)
+    const savedBlog = await blog.save()
+
+    user.blogs = user.blogs.concat(savedBlog._id)
+    await user.save()
+
+    res.status(201).json(savedBlog)
+  } else {
+    res.status(401).json({ error: "not authorized" })
   }
+})
 
-  if (!request.body.likes) {
-    request.body.likes = 0
+blogsRouter.delete("/:id", async (req, res) => {
+  const user = req.user
+  const blog = await Blog.findById(req.params.id)
+
+  if (user && user._id.toString() === blog.user.toString()) {
+    await Blog.findByIdAndDelete(req.params.id)
+    res.status(204).send()
+  } else {
+    res.status(401).json({ error: "unauthorized" })
   }
-
-  const blog = new Blog(request.body)
-  const result = await blog.save()
-  response.status(201).json(result)
 })
 
-blogsRouter.delete("/:id", async (request, response) => {
-  await Blog.findByIdAndDelete(request.params.id)
-  response.status(204).end()
-})
+blogsRouter.patch("/:id", async (req, res) => {
+  const user = req.user
+  const blog = await Blog.findById(req.params.id)
 
-blogsRouter.patch("/:id", async (request, response) => {
-  const updatedBlog = await Blog.findByIdAndUpdate(
-    request.params.id,
-    request.body,
-    {
+  if (user && user._id.toString() === blog.user.toString()) {
+    const updatedBlog = await Blog.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
-    }
-  )
+    })
 
-  response.status(202).json(updatedBlog)
+    res.status(202).json(updatedBlog)
+  } else {
+    res.status(401).json({ error: "unauthorized" })
+  }
 })
 
 module.exports = blogsRouter

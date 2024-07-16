@@ -5,7 +5,11 @@ const User = require("../models/user.js")
 const config = require("../utils/config.js")
 
 blogsRouter.get("/", async (req, res) => {
-  const blogs = await Blog.find({}).populate("user", { username: 1, name: 1 })
+  const user = req.user._id.toString()
+  const blogs = await Blog.find({ user }).populate("user", {
+    username: 1,
+    name: 1,
+  })
   res.json(blogs)
 })
 

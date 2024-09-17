@@ -25,11 +25,11 @@ const Blog = ({ blog, likeBlog, deleteBlog }) => {
       {showDetail && (
         <div>
           <a href={blog.url}>{blog.url}</a>
-          <div>
+          <div className="likes">
             likes {blog.likes}{" "}
             <button onClick={() => likeBlog(blog.id, blog.likes + 1)}>like</button>
           </div>
-          <div>{blog.user.username}</div>
+          <div className="username">{blog.user.username}</div>
           <button onClick={() => deleteBlog(blog)}>delete</button>
         </div>
       )}

@@ -79,7 +79,7 @@ const App = () => {
 
   const handleDeleteBlog = async (blog) => {
     if (!window.confirm(`Delete blog ${blog.title} by ${blog.author}?`)) return
-    
+
     try {
       await blogService.deleteBlog(blog.id)
       getBlogs()
@@ -96,7 +96,7 @@ const App = () => {
   }
 
   const loginForm = () => (
-    <form>
+    <form aria-label="login form">
       <h2>login</h2>
 
       <Notification notification={notification} />
@@ -126,6 +126,7 @@ const App = () => {
       </button>
     </form>
   )
+
   if (!user) return loginForm()
 
   return (
@@ -145,7 +146,13 @@ const App = () => {
       {blogs
         .sort((a, b) => b.likes - a.likes)
         .map((blog) => (
-          <Blog key={blog.id} blog={blog} likeBlog={handleLikeBlog} deleteBlog={handleDeleteBlog} />
+          <Blog
+            key={blog.id}
+            blog={blog}
+            user={user}
+            likeBlog={handleLikeBlog}
+            deleteBlog={handleDeleteBlog}
+          />
         ))}
     </div>
   )

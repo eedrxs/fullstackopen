@@ -1,8 +1,5 @@
-const jwt = require("jsonwebtoken")
 const blogsRouter = require("express").Router()
 const Blog = require("../models/blog.js")
-const User = require("../models/user.js")
-const config = require("../utils/config.js")
 
 blogsRouter.get("/", async (req, res) => {
   const blogs = await Blog.find({}).populate("user", {
@@ -47,19 +44,12 @@ blogsRouter.delete("/:id", async (req, res) => {
 })
 
 blogsRouter.patch("/:id", async (req, res) => {
-  const user = req.user
-  const blog = await Blog.findById(req.params.id)
+  const updatedBlog = await Blog.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  })
 
-  if (user && user._id.toString() === blog.user.toString()) {
-    const updatedBlog = await Blog.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    })
-
-    res.status(202).json(updatedBlog)
-  } else {
-    res.status(401).json({ error: "unauthorized" })
-  }
+  res.status(202).json(updatedBlog)
 })
 
 module.exports = blogsRouter

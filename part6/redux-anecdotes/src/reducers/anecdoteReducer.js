@@ -1,3 +1,5 @@
+import { createSlice } from "@reduxjs/toolkit"
+
 const anecdotesAtStart = [
   "If it hurts, do it more often",
   "Adding manpower to a late software project makes it later!",
@@ -19,42 +21,67 @@ const asObject = (anecdote) => {
 
 const initialState = anecdotesAtStart.map(asObject)
 
-const reducer = (state = initialState, action) => {
-  console.log("state now: ", state)
-  console.log("action", action)
-
-  switch (action.type) {
-    case "VOTE":
-      const id = action.payload.id
-      const anecdoteToChange = state.find((anecdote) => anecdote.id === id)
-      const changedAnecdote = {
-        ...anecdoteToChange,
-        votes: anecdoteToChange.votes + 1,
+const anecdoteSlice = createSlice({
+  name: "anecdotes",
+  initialState,
+  reducers: {
+    voteAnecdote(state, action) {
+      for (let anecdote of state) {
+        if (anecdote.id === action.payload) {
+          anecdote.votes++
+          break
+        }
       }
-      return state.map((anecdote) =>
-        anecdote.id !== id ? anecdote : changedAnecdote
-      )
+    },
+    addAnecdote(state, action) {
+      state.push({
+        content: action.payload,
+        id: getId(),
+        votes: 0,
+      })
+    },
+  },
+})
 
-    case "ADD":
-      return state.concat(action.payload)
+export const { voteAnecdote, addAnecdote } = anecdoteSlice.actions
+export default anecdoteSlice.reducer
 
-    default:
-      return state
-  }
-}
+// const reducer = (state = initialState, action) => {
+//   console.log("state now: ", state)
+//   console.log("action", action)
 
-export default reducer
+//   switch (action.type) {
+//     case "VOTE":
+//       const id = action.payload.id
+//       const anecdoteToChange = state.find((anecdote) => anecdote.id === id)
+//       const changedAnecdote = {
+//         ...anecdoteToChange,
+//         votes: anecdoteToChange.votes + 1,
+//       }
+//       return state.map((anecdote) =>
+//         anecdote.id !== id ? anecdote : changedAnecdote
+//       )
 
-export const voteAnecdote = (id) => {
-  return {
-    type: "VOTE",
-    payload: { id },
-  }
-}
+//     case "ADD":
+//       return state.concat(action.payload)
 
-export const addAnecdote = (content) => {
-  return {
-    type: "ADD",
-    payload: { content, id: getId(), votes: 0 },
-  }
-}
+//     default:
+//       return state
+//   }
+// }
+
+// export default reducer
+
+// export const voteAnecdote = (id) => {
+//   return {
+//     type: "VOTE",
+//     payload: { id },
+//   }
+// }
+
+// export const addAnecdote = (content) => {
+//   return {
+//     type: "ADD",
+//     payload: { content, id: getId(), votes: 0 },
+//   }
+// }

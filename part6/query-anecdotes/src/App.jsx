@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useNotification } from "./contexts/NotificationProvider"
 import AnecdoteForm from "./components/AnecdoteForm"
 import Notification from "./components/Notification"
 import _anecdote from "../api/_anecdote"
 
 const App = () => {
   const queryClient = useQueryClient()
+  const { notificationDispatch } = useNotification()
 
   const handleVote = (anecdote) => {
     mutation.mutate(anecdote)
@@ -24,16 +26,12 @@ const App = () => {
         anecdote.id === updatedAnecdote.id ? updatedAnecdote : anecdote
       )
       queryClient.setQueryData(["anecdotes"], updatedAnecdotes)
+      notificationDispatch({
+        type: "SET",
+        payload: `you voted: '${updatedAnecdote.content}'`,
+      })
     },
   })
-
-  const anecdotes = [
-    {
-      content: "If it hurts, do it more often",
-      id: "47145",
-      votes: 0,
-    },
-  ]
 
   if (query.isError)
     return "anecdote service not available due to problems in server"

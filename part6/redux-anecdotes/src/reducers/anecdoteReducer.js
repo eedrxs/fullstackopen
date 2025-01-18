@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit"
+import anecdoteService from "../services/anecdotes"
 
 const anecdotesAtStart = [
   "If it hurts, do it more often",
@@ -23,7 +24,7 @@ const initialState = anecdotesAtStart.map(asObject)
 
 const anecdoteSlice = createSlice({
   name: "anecdotes",
-  initialState,
+  initialState: [],
   reducers: {
     voteAnecdote(state, action) {
       for (let anecdote of state) {
@@ -34,54 +35,28 @@ const anecdoteSlice = createSlice({
       }
     },
     addAnecdote(state, action) {
-      state.push({
-        content: action.payload,
-        id: getId(),
-        votes: 0,
-      })
+      state.push(action.payload)
+    },
+    setAnecdotes(state, action) {
+      return action.payload
     },
   },
 })
 
-export const { voteAnecdote, addAnecdote } = anecdoteSlice.actions
+export const { voteAnecdote, addAnecdote, setAnecdotes } = anecdoteSlice.actions
 export default anecdoteSlice.reducer
 
-// const reducer = (state = initialState, action) => {
-//   console.log("state now: ", state)
-//   console.log("action", action)
+export const initializeAnecdotes = () => async (dispatch) => {
+  const anecdotes = await anecdoteService.getAll()
+  dispatch(setAnecdotes(anecdotes))
+}
 
-//   switch (action.type) {
-//     case "VOTE":
-//       const id = action.payload.id
-//       const anecdoteToChange = state.find((anecdote) => anecdote.id === id)
-//       const changedAnecdote = {
-//         ...anecdoteToChange,
-//         votes: anecdoteToChange.votes + 1,
-//       }
-//       return state.map((anecdote) =>
-//         anecdote.id !== id ? anecdote : changedAnecdote
-//       )
+export const createAnecdote = (content) => async (dispatch) => {
+  const newAnecdote = await anecdoteService.createNew(content)
+  dispatch(addAnecdote(newAnecdote))
+}
 
-//     case "ADD":
-//       return state.concat(action.payload)
-
-//     default:
-//       return state
-//   }
-// }
-
-// export default reducer
-
-// export const voteAnecdote = (id) => {
-//   return {
-//     type: "VOTE",
-//     payload: { id },
-//   }
-// }
-
-// export const addAnecdote = (content) => {
-//   return {
-//     type: "ADD",
-//     payload: { content, id: getId(), votes: 0 },
-//   }
-// }
+export const incrementAnecdoteVotes = (anecdote) => async (dispatch) => {
+  await anecdoteService.vote(anecdote)
+  dispatch(voteAnecdote(anecdote.id))
+}

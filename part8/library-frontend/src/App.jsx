@@ -1,17 +1,50 @@
-import { useState } from "react";
-import Authors from "./components/Authors";
-import Books from "./components/Books";
-import NewBook from "./components/NewBook";
+import { useEffect, useState } from "react"
+import Authors from "./components/Authors"
+import Books from "./components/Books"
+import NewBook from "./components/NewBook"
+import Recommended from "./components/Recommended"
+import Login from "./components/Login"
 
 const App = () => {
-  const [page, setPage] = useState("authors");
+  const [token, setToken] = useState()
+  const [page, setPage] = useState("authors")
+
+  useEffect(() => {
+    const token = localStorage.getItem("UserToken")
+    setToken(token)
+  }, [])
+
+  const logout = () => {
+    setToken(null)
+    localStorage.removeItem("UserToken")
+  }
+
+  const handleLogin = (token) => {
+    setToken(token)
+    setPage("books")
+  }
+
+  const menuBtn = (value) => {
+    return {
+      onClick: () => setPage(value),
+      style: { outline: page === value ? "2px solid cyan" : "none" },
+    }
+  }
 
   return (
     <div>
       <div>
-        <button onClick={() => setPage("authors")}>authors</button>
-        <button onClick={() => setPage("books")}>books</button>
-        <button onClick={() => setPage("add")}>add book</button>
+        <button {...menuBtn("authors")}>authors</button>
+        <button {...menuBtn("books")}>books</button>
+        {token ? (
+          <>
+            <button {...menuBtn("recommended")}>recommended</button>
+            <button {...menuBtn("add")}>add book</button>
+            <button onClick={logout}>logout</button>
+          </>
+        ) : (
+          <button {...menuBtn("login")}>login</button>
+        )}
       </div>
 
       <Authors show={page === "authors"} />
@@ -19,8 +52,12 @@ const App = () => {
       <Books show={page === "books"} />
 
       <NewBook show={page === "add"} />
-    </div>
-  );
-};
 
-export default App;
+      <Recommended show={page === "recommended"} />
+
+      <Login show={page === "login"} onToken={handleLogin} />
+    </div>
+  )
+}
+
+export default App

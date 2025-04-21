@@ -246,7 +246,7 @@ const resolvers = {
         })
       }
     },
-    editAuthor: async (root, args) => {
+    editAuthor: async (root, args, context) => {
       if (!context.currentUser) {
         throw new GraphQLError("not authenticated", {
           extensions: {
@@ -254,7 +254,7 @@ const resolvers = {
           },
         })
       }
-      
+
       const author = await Author.findOne({ name: args.name })
 
       if (author) {
@@ -303,9 +303,13 @@ const resolvers = {
     },
   },
   Author: {
+    id: (root) => root._id,
     bookCount: async (root) => {
       return await Book.countDocuments({ author: root._id })
     },
+  },
+  Book: {
+    id: (root) => root._id,
   },
 }
 

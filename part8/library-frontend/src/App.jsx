@@ -1,13 +1,45 @@
 import { useEffect, useState } from "react"
+import { gql, useSubscription } from "@apollo/client"
 import Authors from "./components/Authors"
 import Books from "./components/Books"
 import NewBook from "./components/NewBook"
 import Recommended from "./components/Recommended"
 import Login from "./components/Login"
+import queries from "../queries"
 
 const App = () => {
   const [token, setToken] = useState()
   const [page, setPage] = useState("authors")
+
+  useSubscription(queries.BOOK_ADDED, {
+    onData: ({ data: { data }, client }) => {
+      const { bookAdded } = data
+      alert(`New book '${bookAdded.title}' by '${bookAdded.author.name}'`)
+
+      client.cache.modify({
+        fields: {
+          allBooks: (existingBooks = []) => {
+            const newBookRef = client.cache.writeFragment({
+              data: bookAdded,
+              fragment: gql`
+                fragment NewBook on Book {
+                  id
+                  title
+                  published
+                  genres
+                  author {
+                    name
+                  }
+                }
+              `,
+            })
+
+            return [...existingBooks, newBookRef]
+          },
+        },
+      })
+    },
+  })
 
   useEffect(() => {
     const token = localStorage.getItem("UserToken")

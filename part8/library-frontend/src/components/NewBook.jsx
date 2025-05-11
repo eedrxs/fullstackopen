@@ -16,30 +16,31 @@ const NewBook = (props) => {
       setGenres([])
       setGenre("")
     },
-    update: (cache, { data: { addBook } }) => {
-      cache.modify({
-        fields: {
-          allBooks: (existingBooks = []) => {
-            const newBookRef = cache.writeFragment({
-              data: addBook,
-              fragment: gql`
-                fragment NewBook on Book {
-                  id
-                  title
-                  published
-                  genres
-                  author {
-                    name
-                  }
-                }
-              `,
-            })
+    // commented it out because the subscription listens and updates with new books
+    // update: (cache, { data: { addBook } }) => {
+    //   cache.modify({
+    //     fields: {
+    //       allBooks: (existingBooks = []) => {
+    //         const newBookRef = cache.writeFragment({
+    //           data: addBook,
+    //           fragment: gql`
+    //             fragment NewBook on Book {
+    //               id
+    //               title
+    //               published
+    //               genres
+    //               author {
+    //                 name
+    //               }
+    //             }
+    //           `,
+    //         })
 
-            return [...existingBooks, newBookRef]
-          },
-        },
-      })
-    },
+    //         return [...existingBooks, newBookRef]
+    //       },
+    //     },
+    //   })
+    // },
   })
 
   if (!props.show) {

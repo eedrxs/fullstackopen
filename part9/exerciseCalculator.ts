@@ -8,10 +8,12 @@ interface Result {
   average: number;
 }
 
-const calculateExercises = (): Result => {
-  const args = process.argv.slice(2);
+const calculateExercises = (...params: number[]): Result => {
+  const args = require.main === module ? process.argv.slice(2) : params;
   if (args.length < 2) {
-    throw new Error('Not enough arguments. Usage: node exerciseCalculator.js <target> <day1> <day2> ...');
+    throw new Error(
+      "Not enough arguments. Usage: node exerciseCalculator.js <target> <day1> <day2> ..."
+    );
   }
 
   const [targetStr, ...dailyStrs] = args;
@@ -19,17 +21,17 @@ const calculateExercises = (): Result => {
   const dailyExerciseHours = dailyStrs.map(Number);
 
   if (isNaN(target) || dailyExerciseHours.some(isNaN)) {
-    throw new Error('All inputs must be numbers.');
+    throw new Error("All inputs must be numbers.");
   }
   if (target <= 0) {
-    throw new Error('Target must be a positive number.');
+    throw new Error("Target must be a positive number.");
   }
   if (dailyExerciseHours.length === 0) {
-    throw new Error('Provide at least one day of exercise hours.');
+    throw new Error("Provide at least one day of exercise hours.");
   }
 
   const periodLength = dailyExerciseHours.length;
-  const trainingDays = dailyExerciseHours.filter(hours => hours > 0).length;
+  const trainingDays = dailyExerciseHours.filter((hours) => hours > 0).length;
   const totalHours = dailyExerciseHours.reduce((sum, hours) => sum + hours, 0);
   const average = totalHours / periodLength;
   const success = average >= target;
@@ -56,15 +58,17 @@ const calculateExercises = (): Result => {
     rating,
     ratingDescription,
     target,
-    average
+    average,
   };
 };
 
 try {
   const result = calculateExercises();
   console.log(result);
-} catch (error: any) {
-  console.error('Error:', error.message);
+} catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error("Error:", error.message);
+  }
 }
 
 export { calculateExercises, Result };

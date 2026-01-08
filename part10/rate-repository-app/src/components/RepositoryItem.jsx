@@ -1,12 +1,11 @@
-import React from 'react'
-import { Image, StyleSheet, View } from 'react-native'
-import theme from '../constants/theme'
-import Text from './Text'
+import { Image, StyleSheet, View } from "react-native";
+import theme from "../constants/theme";
+import Text from "./Text";
 
 const RepositoryItem = ({ repo }) => {
   return (
-    <View style={styles.container}>
-      <View style={{ flexDirection: 'row', gap: 20 }}>
+    <View testID="repositoryItem" style={styles.container}>
+      <View style={{ flexDirection: "row", gap: 20 }}>
         <Image source={{ uri: repo.ownerAvatarUrl }} style={styles.photo} />
 
         <View style={{ gap: 5 }}>
@@ -24,53 +23,54 @@ const RepositoryItem = ({ repo }) => {
         <Stat title="Rating" value={repo.ratingAverage} />
       </View>
     </View>
-  )
-}
+  );
+};
 
-export default RepositoryItem
+export default RepositoryItem;
 
 const styles = StyleSheet.create({
   container: {
     padding: 10,
-    backgroundColor: 'white',
-    gap: 20
+    backgroundColor: "white",
+    gap: 20,
   },
   photo: {
     width: 45,
     aspectRatio: 1,
     borderRadius: 5,
-    alignSelf: 'flex-start'
+    alignSelf: "flex-start",
   },
   language: {
     backgroundColor: theme.colors.primary,
     borderRadius: 4,
-    color: 'white',
+    color: "white",
     padding: 4,
-    alignSelf: 'flex-start'
+    alignSelf: "flex-start",
   },
   stats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around'
+    flexDirection: "row",
+    justifyContent: "space-around",
   },
   stat: {
     gap: 5,
-    alignItems: 'center'
-  }
-})
-
+    alignItems: "center",
+  },
+});
 
 const Stat = ({ title, value }) => {
   return (
     <View style={styles.stat}>
-      <Text fontWeight="bold" fontSize='subheading'>{formatCount(value)}</Text>
-      <Text fontSize='subheading'>{title}</Text>
+      <Text testID={title} fontWeight="bold" fontSize="subheading">
+        {formatCount(value)}
+      </Text>
+      <Text fontSize="subheading">{title}</Text>
     </View>
-  )
-}
+  );
+};
 
-function formatCount(count) {
+export function formatCount(count) {
   if (count >= 1000) {
-      return (count / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+    return (count / 1000).toFixed(1).replace(/\.0$/, "") + "k";
   }
   return count.toString();
 }

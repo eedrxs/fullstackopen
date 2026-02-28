@@ -1,19 +1,42 @@
+import { useNavigate, useSearchParams } from "react-router-native";
 import useRepositories from "../hooks/useRepositories";
 import RepositoryListContainer from "./RepositoryListContainer";
 import Text from "./Text";
 
 const RepositoryList = () => {
-  const { repositories, loading } = useRepositories();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const searchKeyword = searchParams.get("searchKeyword");
+  const orderBy = searchParams.get("orderBy");
+  const orderDirection = searchParams.get("orderDirection");
+
+  const params = {
+    ...(searchKeyword && { searchKeyword }),
+    ...(orderBy && { orderBy }),
+    ...(orderDirection && { orderDirection }),
+  };
+
+  const { repositories, loading } = useRepositories(params);
 
   const repositoryNodes = repositories
     ? repositories.edges.map((edge) => edge.node)
     : [];
 
   if (loading) {
-    return <Text style={{ marginTop: 20 }}>Fetching repositories...</Text>;
+    return (
+      <Text style={{ marginLeft: 20, marginTop: 20 }}>
+        Fetching repositories...
+      </Text>
+    );
   }
 
-  return <RepositoryListContainer repositories={repositoryNodes} />;
+  return (
+    <RepositoryListContainer
+      navigate={navigate}
+      repositories={repositoryNodes}
+      params={params}
+    />
+  );
 };
 
 export default RepositoryList;

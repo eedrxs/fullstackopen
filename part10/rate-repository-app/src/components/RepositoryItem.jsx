@@ -1,14 +1,21 @@
-import { Image, StyleSheet, View } from "react-native";
+import { Image, Linking, Pressable, StyleSheet, View } from "react-native";
 import theme from "../constants/theme";
 import Text from "./Text";
+import { useParams } from "react-router-native";
 
 const RepositoryItem = ({ repo }) => {
+  const { id } = useParams();
+  const isRepoPage = !!id;
+
   return (
-    <View testID="repositoryItem" style={styles.container}>
+    <View
+      testID="repositoryItem"
+      style={[styles.container, isRepoPage && { marginBottom: 10 }]}
+    >
       <View style={{ flexDirection: "row", gap: 20 }}>
         <Image source={{ uri: repo.ownerAvatarUrl }} style={styles.photo} />
 
-        <View style={{ gap: 5 }}>
+        <View style={{ gap: 5, flex: 1 }}>
           <Text fontWeight="bold">{repo.fullName}</Text>
           <Text>{repo.description}</Text>
           <Text style={styles.language}>{repo.language}</Text>
@@ -22,6 +29,15 @@ const RepositoryItem = ({ repo }) => {
         <Stat title="Reviews" value={repo.reviewCount} />
         <Stat title="Rating" value={repo.ratingAverage} />
       </View>
+
+      {isRepoPage && (
+        <Pressable
+          onPress={() => Linking.openURL(repo.url)}
+          style={styles.openBtn}
+        >
+          <Text style={styles.openBtnText}>Open in GitHub</Text>
+        </Pressable>
+      )}
     </View>
   );
 };
@@ -54,6 +70,22 @@ const styles = StyleSheet.create({
   stat: {
     gap: 5,
     alignItems: "center",
+  },
+  openBtn: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: 4,
+    color: "white",
+    padding: 4,
+    height: 50,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  openBtnText: {
+    textAlign: "center",
+    color: "white",
+    fontSize: 16,
+    fontWeight: 800,
   },
 });
 

@@ -2,6 +2,7 @@ import { useApolloClient } from "@apollo/client/react";
 import useAuthStorage from "../hooks/useAuthStorage";
 import useSignIn from "../hooks/useSignIn";
 import SignInContainer from "./SignInContainer";
+import { Alert } from "react-native";
 
 const SignIn = () => {
   const apolloClient = useApolloClient();
@@ -17,7 +18,7 @@ const SignIn = () => {
       await authStorage.setAccessToken(accessToken);
       apolloClient.resetStore();
     } catch (e) {
-      console.log(e);
+      Alert.alert(e.message);
     }
   };
 

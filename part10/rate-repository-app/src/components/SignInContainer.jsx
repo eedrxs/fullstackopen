@@ -23,6 +23,7 @@ const SignInContainer = ({ onSubmit, result }) => {
         placeholder="Username"
         value={formik.values.username}
         onChangeText={formik.handleChange("username")}
+        autoCapitalize="none"
         style={[styles.input, usernameError && { borderColor: "#d73a4a" }]}
       />
       {usernameError && (
@@ -33,6 +34,7 @@ const SignInContainer = ({ onSubmit, result }) => {
         placeholder="Password"
         value={formik.values.password}
         onChangeText={formik.handleChange("password")}
+        autoCapitalize="none"
         style={[styles.input, passwordError && { borderColor: "#d73a4a" }]}
         secureTextEntry
       />

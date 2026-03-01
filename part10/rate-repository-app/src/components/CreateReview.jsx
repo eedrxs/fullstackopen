@@ -48,6 +48,7 @@ const CreateReview = () => {
         placeholder="Repository owner name"
         value={formik.values.username}
         onChangeText={formik.handleChange("username")}
+        autoCapitalize="none"
         style={[styles.input, usernameError && { borderColor: "#d73a4a" }]}
       />
       {usernameError && (
@@ -58,6 +59,7 @@ const CreateReview = () => {
         placeholder="Repository name"
         value={formik.values.name}
         onChangeText={formik.handleChange("name")}
+        autoCapitalize="none"
         style={[styles.input, nameError && { borderColor: "#d73a4a" }]}
       />
       {nameError && <Text style={{ color: "#d73a4a" }}>{nameError}</Text>}

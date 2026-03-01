@@ -7,11 +7,13 @@ import { FlatList, View } from "react-native";
 import ReviewItem from "./ReviewItem";
 
 const SingleRepository = () => {
-  const { id } = useParams();
-  const { data } = useQuery(GET_REPOSITORY, {
-    variables: { repositoryId: id },
+  const { id: repositoryId } = useParams();
+  const variables = { repositoryId, first: 3 };
+
+  const { data, loading, fetchMore, ...result } = useQuery(GET_REPOSITORY, {
+    variables,
     fetchPolicy: "cache-and-network",
-    skip: !id,
+    skip: !repositoryId,
   });
 
   if (!data) {
@@ -25,13 +27,31 @@ const SingleRepository = () => {
   const { repository } = data;
   const reviews = repository.reviews.edges.map((edge) => edge.node);
 
+  const handleFetchMore = () => {
+    const canFetchMore =
+      !loading && data?.repository.reviews.pageInfo.hasNextPage;
+
+    if (!canFetchMore) {
+      return;
+    }
+
+    fetchMore({
+      variables: {
+        after: data.repository.reviews.pageInfo.endCursor,
+        ...variables,
+      },
+    });
+  };
+
   return (
     <FlatList
       data={reviews}
       renderItem={({ item }) => <ReviewItem review={item} />}
       keyExtractor={({ id }) => id}
       ListHeaderComponent={() => <RepositoryItem repo={repository} />}
-      ItemSeparatorComponent={() => <View style={{height: 10}} />}
+      ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+      onEndReached={handleFetchMore}
+      onEndReachedThreshold={0.5}
     />
   );
 };

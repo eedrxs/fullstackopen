@@ -6,7 +6,6 @@ const useCreateReview = () => {
   const navigate = useNavigate();
   const [mutate, result] = useMutation(CREATE_REVIEW, {
     onCompleted: (res) => {
-      console.log(res);
       // navigate(`/repo/`);
     },
   });
